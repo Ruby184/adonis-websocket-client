@@ -250,6 +250,8 @@ export default class Connection extends Emitter {
     if (process.env.NODE_ENV !== 'production') {
       debug('opened')
     }
+
+    this._reconnectionAttempts = 0
   }
 
   /**
@@ -312,9 +314,11 @@ export default class Connection extends Emitter {
     this._cleanup()
 
     /**
-     * Force subscriptions to terminate
+     * Force subscriptions to terminate if not reconnecting
      */
-    this._subscriptionsIterator((subscription) => subscription.terminate())
+    if (!this.shouldReconnect) {
+      this._subscriptionsIterator((subscription) => subscription.terminate())
+    }
 
     this
       .emit('close', this)

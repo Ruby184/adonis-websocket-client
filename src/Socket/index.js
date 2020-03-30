@@ -27,7 +27,7 @@ export default class Socket {
     this.emitter = new Emitter()
     this._state = 'pending'
     this._emitBuffer = []
-    this._acks = new Map()
+    this._acks = {}
     this._nextAckId = 0
   }
 
@@ -179,7 +179,7 @@ export default class Socket {
     let id
     if (typeof (ack) === 'function') {
       id = this._nextAckId++
-      this._acks.set(id, ack)
+      this._acks[id] = { event, data, ack }
     }
 
     this.connection.sendEvent(this.topic, event, data, id)
@@ -200,12 +200,12 @@ export default class Socket {
       .then(() => {
         this._emitBuffer = []
         this.emitter.clearListeners()
-        this._acks.clear()
+        this._acks = {}
       })
       .catch(() => {
         this._emitBuffer = []
         this.emitter.clearListeners()
-        this._acks.clear()
+        this._acks = {}
       })
   }
 
@@ -234,10 +234,10 @@ export default class Socket {
    * @return {void}
    */
   serverAck ({ id, data }) {
-    if (this._acks.has(id)) {
-      const ack = this._acks.get(id)
+    if (this._acks[id]) {
+      const { ack } = this._acks[id]
       ack(null, data)
-      this._acks.delete(id)
+      delete this._acks[id]
     } else {
       if (process.env.NODE_ENV !== 'production') {
         debug('bad ack %s for %s topic', id, this.topic)
@@ -256,10 +256,10 @@ export default class Socket {
    * @return {void}
    */
   serverAckError ({ id, message }) {
-    if (this._acks.has(id)) {
-      const ack = this._acks.get(id)
+    if (this._acks[id]) {
+      const { ack } = this._acks[id]
       ack(new Error(message))
-      this._acks.delete(id)
+      delete this._acks[id]
     } else {
       if (process.env.NODE_ENV !== 'production') {
         debug('bad error ack %s for %s topic', id, this.topic)
@@ -276,6 +276,13 @@ export default class Socket {
    */
   serverError () {
     this.state = 'error'
+
+    Object.keys(this._acks).forEach((id) => {
+      this._emitBuffer.push(this._acks[id])
+    })
+
+    this._acks = {}
+    this._nextAckId = 0
   }
 
   /**
