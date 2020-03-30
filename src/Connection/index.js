@@ -133,10 +133,12 @@ export default class Connection extends Emitter {
    *
    * @return {Boolean}
    */
+  get shouldAttemptReconnect () {
+    return this.shouldReconnect && this.options.reconnectionAttempts > this._reconnectionAttempts
+  }
+
   get shouldReconnect () {
-    return this._connectionState !== 'terminated' &&
-    this.options.reconnection &&
-    this.options.reconnectionAttempts > this._reconnectionAttempts
+    return this._connectionState !== 'terminated' && this.options.reconnection
   }
 
   /**
@@ -270,8 +272,14 @@ export default class Connection extends Emitter {
       debug('error %O', event)
     }
 
-    this._subscriptionsIterator((subscription) => (subscription.serverError()))
+    let pendingAcks = 0
+
+    this._subscriptionsIterator((subscription) => {
+      pendingAcks += subscription.serverError()
+    })
+
     this.emit('error', event)
+    this.emit('disconnect', pendingAcks)
   }
 
   /**
@@ -320,14 +328,17 @@ export default class Connection extends Emitter {
       this._subscriptionsIterator((subscription) => subscription.terminate())
     }
 
-    this
-      .emit('close', this)
-      .then(() => {
-        this.shouldReconnect ? this._reconnect() : this.clearListeners()
-      })
-      .catch(() => {
-        this.shouldReconnect ? this._reconnect() : this.clearListeners()
-      })
+    const onClose = () => {
+      if (this.shouldAttemptReconnect) {
+        this._reconnect()
+      } else if (this.shouldReconnect) {
+        this.emit('reconnectFailed')
+      } else {
+        this.clearListeners()
+      }
+    }
+
+    this.emit('close', this).then(onClose, onClose)
   }
 
   /**
@@ -694,6 +705,11 @@ export default class Connection extends Emitter {
     this.ws.onmessage = (event) => this._onMessage(event)
 
     return this
+  }
+
+  reconnect () {
+    this._reconnectionAttempts = 0
+    this.connect()
   }
 
   /**

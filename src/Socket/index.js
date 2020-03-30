@@ -277,12 +277,16 @@ export default class Socket {
   serverError () {
     this.state = 'error'
 
-    Object.keys(this._acks).forEach((id) => {
+    const acks = Object.keys(this._acks)
+
+    acks.forEach((id) => {
       this._emitBuffer.push(this._acks[id])
     })
 
     this._acks = {}
     this._nextAckId = 0
+
+    return acks.length
   }
 
   /**
