@@ -180,6 +180,10 @@ export default class Socket {
     if (typeof (ack) === 'function') {
       id = this._nextAckId++
       this._acks[id] = { event, data, ack }
+
+      if (this.state === 'error') {
+        return
+      }
     }
 
     this.connection.sendEvent(this.topic, event, data, id)

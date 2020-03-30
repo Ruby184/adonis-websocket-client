@@ -849,7 +849,7 @@ export default class Connection extends Emitter {
      * and send packets, even when subscription is closed.
      */
     if (subscription.state !== 'open') {
-      throw new Error(`Cannot emit since subscription socket is in ${this.state} state`)
+      throw new Error(`Cannot emit since subscription socket is in ${subscription.state} state`)
     }
 
     if (process.env.NODE_ENV !== 'production') {
