@@ -332,7 +332,7 @@ export default class Connection extends Emitter {
       if (this.shouldAttemptReconnect) {
         this._reconnect()
       } else if (this.shouldReconnect) {
-        this.emit('reconnectFailed')
+        this.emit('reconnect:failed')
       } else {
         this.clearListeners()
       }
@@ -709,6 +709,7 @@ export default class Connection extends Emitter {
 
   reconnect () {
     this._reconnectionAttempts = 0
+    this.emit('reconnect:triggered')
     this.connect()
   }
 
