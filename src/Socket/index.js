@@ -10,7 +10,7 @@
 */
 
 import Emitter from 'emittery'
-import wsp from '@adonisjs/websocket-packet'
+import wsp from '@uxtweak/adonis-websocket-packet'
 import debug from '../Debug/index.js'
 
 /**

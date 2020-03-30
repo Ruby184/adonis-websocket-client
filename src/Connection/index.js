@@ -11,7 +11,7 @@
 
 import Emitter from 'emittery'
 import { stringify } from 'query-string'
-import wsp from '@adonisjs/websocket-packet'
+import wsp from '@uxtweak/adonis-websocket-packet'
 import debug from '../Debug/index.js'
 import Socket from '../Socket/index.js'
 import JsonEncoder from '../JsonEncoder/index.js'

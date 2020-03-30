@@ -68,7 +68,7 @@ function umdProductionBuild () {
     'process.env.NODE_ENV': JSON.stringify('production')
   })
 
-  const pluginUglify = require('rollup-plugin-uglify')()
+  const { uglify } = require('rollup-plugin-uglify')
 
   return {
     input: 'index.js',
@@ -77,7 +77,7 @@ function umdProductionBuild () {
       name: 'adonis.Ws',
       format: 'umd'
     },
-    plugins: [pluginReplace].concat(basePlugins).concat([pluginBabel, pluginUglify])
+    plugins: [pluginReplace].concat(basePlugins).concat([pluginBabel, uglify()])
   }
 }
 
