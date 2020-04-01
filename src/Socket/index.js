@@ -259,10 +259,10 @@ export default class Socket {
    *
    * @return {void}
    */
-  serverAckError ({ id, message }) {
+  serverAckError ({ id, message, ...other }) {
     if (this._acks[id]) {
       const { ack } = this._acks[id]
-      ack(new Error(message))
+      ack(Object.assign(new Error(message), other))
       delete this._acks[id]
     } else {
       if (process.env.NODE_ENV !== 'production') {
