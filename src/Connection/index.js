@@ -593,7 +593,7 @@ export default class Connection extends Emitter {
             this._sendAckPacket(packet.d.topic, packet.d.id, data)
           })
           .catch((error) => {
-            this._sendAckErrorPacket(packet.d.topic, packet.d.id, error.message)
+            this._sendAckErrorPacket(packet.d.topic, packet.d.id, error)
           })
       }
     })
@@ -673,14 +673,14 @@ export default class Connection extends Emitter {
    *
    * @param  {String}  topic
    * @param  {Number}  id
-   * @param  {String}  message
+   * @param  {Error}  error
    *
    * @return {void}
    *
    * @private
    */
-  _sendAckErrorPacket (topic, id, message) {
-    this.sendPacket(wsp.ackErrorPacket(topic, id, message))
+  _sendAckErrorPacket (topic, id, error) {
+    this.sendPacket(wsp.ackErrorPacket(topic, id, error))
   }
 
   /**
