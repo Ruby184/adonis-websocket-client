@@ -50,6 +50,7 @@ export default class Connection extends Emitter {
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
+      connectionTimeout: 2500,
       query: null,
       encoder: JsonEncoder
     }, options)
@@ -94,6 +95,13 @@ export default class Connection extends Emitter {
      * @type {Timer}
      */
     this._pingTimer = null
+
+    /**
+     * Timeout for time we should wait to establish a connection
+     *
+     * @type {Timer}
+     */
+    this._connectTimeout = null
 
     /**
      * Extended query is merged with the query params
@@ -152,8 +160,10 @@ export default class Connection extends Emitter {
    */
   _cleanup () {
     clearInterval(this._pingTimer)
+    clearTimeout(this._connectTimeout)
     this.ws = null
     this._pingTimer = null
+    this._connectTimeout = null
   }
 
   /**
@@ -253,6 +263,7 @@ export default class Connection extends Emitter {
       debug('opened')
     }
 
+    clearTimeout(this._connectTimeout)
     this._reconnectionAttempts = 0
   }
 
@@ -704,6 +715,10 @@ export default class Connection extends Emitter {
     this.ws.onopen = (event) => this._onOpen(event)
     this.ws.onmessage = (event) => this._onMessage(event)
 
+    this._connectTimeout = setTimeout(() => {
+      this.ws.close()
+    }, this.options.connectionTimeout)
+
     return this
   }
 
@@ -909,8 +924,8 @@ export default class Connection extends Emitter {
    *
    * @return {void}
    */
-  close () {
+  close (code = 1000) {
     this._connectionState = 'terminated'
-    this.ws.close()
+    this.ws.close(code)
   }
 }
