@@ -283,14 +283,19 @@ export default class Connection extends Emitter {
       debug('error %O', event)
     }
 
+    this._resetPendingAcks()
+
+    this.emit('error', event)
+  }
+
+  _resetPendingAcks () {
     let pendingAcks = 0
 
     this._subscriptionsIterator((subscription) => {
       pendingAcks += subscription.serverError()
     })
 
-    this.emit('error', event)
-    this.emit('disconnect', pendingAcks)
+    return pendingAcks
   }
 
   /**
@@ -337,6 +342,8 @@ export default class Connection extends Emitter {
      */
     if (!this.shouldReconnect) {
       this._subscriptionsIterator((subscription) => subscription.terminate())
+    } else if (event.code !== 1000 && !event.wasClean) {
+      this.emit('disconnect', this._resetPendingAcks())
     }
 
     const onClose = () => {
