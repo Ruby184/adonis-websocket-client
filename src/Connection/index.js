@@ -283,8 +283,6 @@ export default class Connection extends Emitter {
       debug('error %O', event)
     }
 
-    this._resetPendingAcks()
-
     this.emit('error', event)
   }
 
