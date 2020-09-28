@@ -259,10 +259,10 @@ export default class Socket {
    *
    * @return {void}
    */
-  serverAckError ({ id, message, name, code, status, stack }) {
+  serverAckError ({ id, error }) {
     if (this._acks[id]) {
       const { ack } = this._acks[id]
-      ack(Object.assign(new Error(message), { name, code, status, stack }))
+      ack(wsp.deserializeError(error))
       delete this._acks[id]
     } else {
       if (process.env.NODE_ENV !== 'production') {
